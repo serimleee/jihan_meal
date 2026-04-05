@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>지꿀이 수유 기록</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #FDF8F2;
+    --warm: #F5EDE0;
+    --peach: #F2C4A0;
+    --blush: #E8A07A;
+    --rose: #D4735A;
+    --brown: #8B5E3C;
+    --dark: #3A2518;
+    --muted: #9B7B65;
+    --soft-border: #E8D8C8;
+    --formula-bg: #EAF4FB;
+    --formula-mid: #7BBDDC;
+    --formula-dark: #2A7FAF;
+    --solid-bg: #F0F7E8;
+    --solid-mid: #8DC87A;
+    --solid-dark: #4A8C35;
+    --total-bg: #FFF3E8;
+    --total-dark: #C05A25;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+  }
+
+  /* Header */
+  .hero {
+    text-align: center;
+    padding: 2.5rem 0 2rem;
+    position: relative;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: var(--peach);
+    color: var(--brown);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    color: var(--dark);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+  .hero h1 span { color: var(--rose); }
+  .hero-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+    font-weight: 300;
+  }
+  .divider {
+    width: 48px;
+    height: 2px;
+    background: var(--peach);
+    margin: 16px auto 0;
+    border-radius: 2px;
+  }
+
+  /* Nav */
+  .month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 1.5rem 0;
+  }
+  .nav-btn {
+    background: white;
+    border: 1px solid var(--soft-border);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+    cursor: pointer;
+    color: var(--brown);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .nav-btn:hover { background: var(--warm); border-color: var(--peach); }
+  .month-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--dark);
+    min-width: 110px;
+    text-align: center;
+  }
+
+  /* Summary cards */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 1.75rem;
+  }
+  .scard {
+    background: white;
+    border: 1px solid var(--soft-border);
+    border-radius: 16px;
+    padding: 1rem 1.1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .scard::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 16px 16px 0 0;
+  }
+  .scard.formula::before { background: var(--formula-mid); }
+  .scard.solid::before { background: var(--solid-mid); }
+  .scard.total::before { background: var(--blush); }
+  .scard-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .scard-val {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .scard.formula .scard-val { color: var(--formula-dark); }
+  .scard.solid .scard-val { color: var(--solid-dark); }
+  .scard.total .scard-val { color: var(--total-dark); }
+  .scard-unit { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+
+  /* Table */
+  .table-wrap {
+    background: white;
+    border: 1px solid var(--soft-border);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    background: var(--warm);
+    padding: 10px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--soft-border);
+    text-align: center;
+  }
+  thead th:first-child { text-align: left; padding-left: 16px; min-width: 70px; }
+  tbody tr { border-bottom: 1px solid var(--soft-border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #FDFAF7; }
+  tbody tr.today-row { background: #FFF8F2; }
+  tbody td { padding: 8px 6px; vertical-align: top; }
+  tbody td:first-child {
+    padding-left: 16px;
+    padding-top: 11px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  tbody td:first-child .today-dot {
+    display: inline-block;
+    width: 5px; height: 5px;
+    background: var(--rose);
+    border-radius: 50%;
+    margin-left: 4px;
+    vertical-align: middle;
+    margin-bottom: 1px;
+  }
+
+  .feed-list { display: flex; flex-direction: column; gap: 5px; }
+  .feed-row { display: flex; align-items: center; gap: 4px; }
+  .time-input {
+    width: 70px;
+    border: 1px solid var(--soft-border);
+    border-radius: 8px;
+    padding: 4px 6px;
+    font-size: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    text-align: center;
+    transition: border-color 0.15s;
+  }
+  .time-input:focus { outline: none; border-color: var(--peach); background: white; }
+  .amt-input {
+    width: 48px;
+    border: 1px solid var(--soft-border);
+    border-radius: 8px;
+    padding: 4px 5px;
+    text-align: center;
+    font-size: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    transition: border-color 0.15s;
+  }
+  .amt-input:focus { outline: none; border-color: var(--peach); background: white; }
+  .unit-lbl { font-size: 11px; color: var(--muted); min-width: 14px; }
+  .add-btn {
+    background: none;
+    border: 1px dashed var(--soft-border);
+    border-radius: 7px;
+    width: 22px; height: 22px;
+    cursor: pointer;
+    font-size: 15px;
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+    transition: background 0.1s, border-color 0.1s;
+  }
+  .add-btn:hover { background: var(--warm); border-color: var(--peach); color: var(--brown); }
+  .del-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    color: #CCC;
+    padding: 0 2px;
+    transition: color 0.1s;
+  }
+  .del-btn:hover { color: var(--rose); }
+
+  .total-cell {
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    padding-top: 11px !important;
+    color: var(--dark);
+  }
+  .total-cell.formula-total { color: var(--formula-dark); }
+  .total-cell.solid-total { color: var(--solid-dark); }
+  .total-cell.grand-total { color: var(--total-dark); font-size: 14px; }
+  .dash { color: #DDD; font-weight: 400; }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 26px; }
+    .summary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .scard { padding: 0.75rem 0.75rem; }
+    .scard-val { font-size: 20px; }
+    thead th { font-size: 10px; padding: 8px 4px; }
+    .time-input { width: 60px; font-size: 11px; }
+    .amt-input { width: 40px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hero">
+    <div class="hero-badge">feeding tracker</div>
+    <h1>지꿀이 <span>수유 기록</span></h1>
+    <p class="hero-sub">분유 · 이유식 섭취량 및 시간 추적</p>
+    <div class="divider"></div>
+  </div>
+
+  <div class="month-nav">
+    <button class="nav-btn" id="prevBtn">◀</button>
+    <div class="month-title" id="monthLabel"></div>
+    <button class="nav-btn" id="nextBtn">▶</button>
+  </div>
+
+  <div class="summary">
+    <div class="scard formula">
+      <div class="scard-label">분유 총량</div>
+      <div><span class="scard-val" id="sumFormula">0</span><span class="scard-unit">ml</span></div>
+    </div>
+    <div class="scard solid">
+      <div class="scard-label">이유식 총량</div>
+      <div><span class="scard-val" id="sumSolid">0</span><span class="scard-unit">g</span></div>
+    </div>
+    <div class="scard total">
+      <div class="scard-label">합계 (ml+g)</div>
+      <div><span class="scard-val" id="sumTotal">0</span></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th>분유 (시간 · ml)</th>
+          <th>이유식 (시간 · g)</th>
+          <th>분유<br>합계</th>
+          <th>이유식<br>합계</th>
+          <th>총합</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const KEY = 'jikkooli_v1';
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) {}
+
+let curY = 2025, curM = 3;
+const today = new Date();
+
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} }
+function getDays(y, m) { return new Date(y, m + 1, 0).getDate(); }
+function dKey(y, m, d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function getDay(key) {
+  if (!state[key]) state[key] = { formula: [{time:'',amt:0}], solid: [{time:'',amt:0}] };
+  return state[key];
+}
+function sumE(arr) { return arr.reduce((a, b) => a + (parseFloat(b.amt)||0), 0); }
+
+function buildList(key, type) {
+  const data = getDay(key)[type];
+  const unit = type === 'formula' ? 'ml' : 'g';
+  const step = type === 'formula' ? 10 : 5;
+  const rows = data.map((e, i) => `
+    <div class="feed-row">
+      <input class="time-input" type="time" value="${e.time||''}" data-key="${key}" data-type="${type}" data-idx="${i}" data-field="time" />
+      <input class="amt-input" type="number" min="0" max="400" step="${step}" value="${e.amt||''}" placeholder="0" data-key="${key}" data-type="${type}" data-idx="${i}" data-field="amt" />
+      <span class="unit-lbl">${unit}</span>
+      ${data.length > 1 ? `<button class="del-btn" data-key="${key}" data-type="${type}" data-idx="${i}">✕</button>` : '<span style="width:16px"></span>'}
+    </div>
+  `).join('');
+  return `<div class="feed-list">${rows}<button class="add-btn" data-key="${key}" data-type="${type}">+</button></div>`;
+}
+
+function render() {
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('monthLabel').textContent = `${curY}년 ${months[curM]}`;
+  const days = getDays(curY, curM);
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  let totF = 0, totS = 0;
+
+  for (let d = 1; d <= days; d++) {
+    const key = dKey(curY, curM, d);
+    const data = getDay(key);
+    const fSum = sumE(data.formula);
+    const sSum = sumE(data.solid);
+    totF += fSum; totS += sSum;
+    const grand = fSum + sSum;
+    const isToday = today.getFullYear() === curY && today.getMonth() === curM && today.getDate() === d;
+    const dow = ['일','월','화','수','목','금','토'][new Date(curY, curM, d).getDay()];
+
+    const tr = document.createElement('tr');
+    if (isToday) tr.className = 'today-row';
+    tr.innerHTML = `
+      <td>${d}일 (${dow})${isToday ? '<span class="today-dot"></span>' : ''}</td>
+      <td>${buildList(key,'formula')}</td>
+      <td>${buildList(key,'solid')}</td>
+      <td class="total-cell formula-total">${fSum > 0 ? fSum+'ml' : '<span class="dash">-</span>'}</td>
+      <td class="total-cell solid-total">${sSum > 0 ? sSum+'g' : '<span class="dash">-</span>'}</td>
+      <td class="total-cell grand-total">${grand > 0 ? grand : '<span class="dash">-</span>'}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById('sumFormula').textContent = Math.round(totF);
+  document.getElementById('sumSolid').textContent = Math.round(totS);
+  document.getElementById('sumTotal').textContent = Math.round(totF + totS).toLocaleString();
+}
+
+document.getElementById('tableBody').addEventListener('change', e => {
+  const el = e.target;
+  const { key, type, idx, field } = el.dataset;
+  if (!key) return;
+  const entry = getDay(key)[type][parseInt(idx)];
+  if (field === 'time') entry.time = el.value;
+  else entry.amt = parseFloat(el.value) || 0;
+  save(); render();
+});
+
+document.getElementById('tableBody').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const { key, type, idx } = btn.dataset;
+  if (btn.classList.contains('add-btn')) {
+    getDay(key)[type].push({time:'', amt:0});
+  } else if (btn.classList.contains('del-btn')) {
+    getDay(key)[type].splice(parseInt(idx), 1);
+  }
+  save(); render();
+});
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  curM--; if (curM < 0) { curM = 11; curY--; } render();
+});
+document.getElementById('nextBtn').addEventListener('click', () => {
+  curM++; if (curM > 11) { curM = 0; curY++; } render();
+});
+
+render();
+</script>
+</body>
+</html>
