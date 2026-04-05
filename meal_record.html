@@ -21,6 +21,9 @@
     --solid-mid: #8DC87A;
     --solid-dark: #4A8C35;
     --total-dark: #C05A25;
+    --med-mid: #B39DDB;
+    --med-dark: #6A3DAB;
+    --med-bg: #F3EEFF;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -207,7 +210,7 @@
   /* Summary cards */
   .summary {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     margin-bottom: 1.75rem;
   }
@@ -355,14 +358,45 @@
   .total-cell.grand-total { color: var(--total-dark); font-size: 14px; }
   .dash { color: #DDD; font-weight: 400; }
 
+  .scard.med::before { background: var(--med-mid); }
+  .scard.med .scard-val { color: var(--med-dark); }
+
+  .med-name-input {
+    flex: 1;
+    border: 1px solid var(--soft-border);
+    border-radius: 8px;
+    padding: 4px 7px;
+    font-size: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    transition: border-color 0.15s;
+    min-width: 0;
+  }
+  .med-name-input:focus { outline: none; border-color: var(--med-mid); background: white; }
+  .med-tag {
+    display: inline-block;
+    background: var(--med-bg);
+    color: var(--med-dark);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 1px 6px;
+    white-space: nowrap;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   @media (max-width: 600px) {
     .hero h1 { font-size: 26px; }
-    .summary { gap: 8px; }
+    .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .scard { padding: 0.75rem 0.75rem; }
     .scard-val { font-size: 20px; }
     thead th { font-size: 10px; padding: 8px 4px; }
     .time-input { width: 60px; font-size: 11px; }
     .amt-input { width: 40px; font-size: 11px; }
+    .med-name-input { font-size: 11px; }
   }
 </style>
 </head>
@@ -412,6 +446,10 @@
       <div class="scard-label">합계 (ml+g)</div>
       <div><span class="scard-val" id="sumTotal">0</span></div>
     </div>
+    <div class="scard med">
+      <div class="scard-label">약 기록</div>
+      <div><span class="scard-val" id="sumMed">0</span><span class="scard-unit">회</span></div>
+    </div>
   </div>
 
   <div class="table-wrap">
@@ -421,6 +459,7 @@
           <th>날짜</th>
           <th>분유 (시간 · ml)</th>
           <th>이유식 (시간 · g)</th>
+          <th>약 (시간 · 종류)</th>
           <th>분유<br>합계</th>
           <th>이유식<br>합계</th>
           <th>총합</th>
@@ -452,10 +491,22 @@ function saveNav() { try { localStorage.setItem(NAV_KEY, JSON.stringify({y: curY
 function getDays(y, m) { return new Date(y, m + 1, 0).getDate(); }
 function dKey(y, m, d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
 function getDay(key) {
-  if (!state[key]) state[key] = { formula: [{time:'',amt:0}], solid: [{time:'',amt:0}] };
+  if (!state[key]) state[key] = { formula: [{time:'',amt:0}], solid: [{time:'',amt:0}], med: [{time:'',name:''}] };
+  if (!state[key].med) state[key].med = [{time:'',name:''}];
   return state[key];
 }
 function sumE(arr) { return arr.reduce((a, b) => a + (parseFloat(b.amt)||0), 0); }
+function countMed(arr) { return arr.filter(e => e.time || e.name).length; }
+
+// Sort entries by time (entries with no time go to bottom)
+function sortByTime(arr) {
+  return [...arr].sort((a, b) => {
+    if (!a.time && !b.time) return 0;
+    if (!a.time) return 1;
+    if (!b.time) return -1;
+    return a.time.localeCompare(b.time);
+  });
+}
 
 function buildList(key, type) {
   const data = getDay(key)[type];
@@ -472,19 +523,32 @@ function buildList(key, type) {
   return `<div class="feed-list">${rows}<button class="add-btn" data-key="${key}" data-type="${type}">+</button></div>`;
 }
 
+function buildMedList(key) {
+  const data = getDay(key).med;
+  const rows = data.map((e, i) => `
+    <div class="feed-row">
+      <input class="time-input" type="time" value="${e.time||''}" data-key="${key}" data-type="med" data-idx="${i}" data-field="time" />
+      <input class="med-name-input" type="text" value="${e.name||''}" placeholder="약 종류" data-key="${key}" data-type="med" data-idx="${i}" data-field="name" />
+      ${data.length > 1 ? `<button class="del-btn" data-key="${key}" data-type="med" data-idx="${i}">✕</button>` : '<span style="width:16px"></span>'}
+    </div>
+  `).join('');
+  return `<div class="feed-list">${rows}<button class="add-btn" data-key="${key}" data-type="med">+</button></div>`;
+}
+
 function render() {
   document.getElementById('monthLabel').textContent = `${curY}년 ${MONTHS[curM]}`;
   const days = getDays(curY, curM);
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '';
-  let totF = 0, totS = 0;
+  let totF = 0, totS = 0, totMed = 0;
 
   for (let d = 1; d <= days; d++) {
     const key = dKey(curY, curM, d);
     const data = getDay(key);
     const fSum = sumE(data.formula);
     const sSum = sumE(data.solid);
-    totF += fSum; totS += sSum;
+    const mCount = countMed(data.med);
+    totF += fSum; totS += sSum; totMed += mCount;
     const grand = fSum + sSum;
     const isToday = today.getFullYear() === curY && today.getMonth() === curM && today.getDate() === d;
     const dow = ['일','월','화','수','목','금','토'][new Date(curY, curM, d).getDay()];
@@ -495,6 +559,7 @@ function render() {
       <td>${d}일 (${dow})${isToday ? '<span class="today-dot"></span>' : ''}</td>
       <td>${buildList(key,'formula')}</td>
       <td>${buildList(key,'solid')}</td>
+      <td>${buildMedList(key)}</td>
       <td class="total-cell formula-total">${fSum > 0 ? fSum+'ml' : '<span class="dash">-</span>'}</td>
       <td class="total-cell solid-total">${sSum > 0 ? sSum+'g' : '<span class="dash">-</span>'}</td>
       <td class="total-cell grand-total">${grand > 0 ? grand : '<span class="dash">-</span>'}</td>
@@ -505,6 +570,7 @@ function render() {
   document.getElementById('sumFormula').textContent = Math.round(totF);
   document.getElementById('sumSolid').textContent = Math.round(totS);
   document.getElementById('sumTotal').textContent = Math.round(totF + totS).toLocaleString();
+  document.getElementById('sumMed').textContent = totMed;
   saveNav();
 }
 
@@ -547,9 +613,24 @@ document.getElementById('tableBody').addEventListener('change', e => {
   const el = e.target;
   const { key, type, idx, field } = el.dataset;
   if (!key) return;
-  const entry = getDay(key)[type][parseInt(idx)];
-  if (field === 'time') entry.time = el.value;
-  else entry.amt = parseFloat(el.value) || 0;
+  const dayData = getDay(key)[type];
+  const entry = dayData[parseInt(idx)];
+
+  if (type === 'med') {
+    if (field === 'time') entry.time = el.value;
+    else if (field === 'name') entry.name = el.value;
+    // Sort by time after time change
+    if (field === 'time') {
+      getDay(key).med = sortByTime(getDay(key).med);
+    }
+  } else {
+    if (field === 'time') entry.time = el.value;
+    else entry.amt = parseFloat(el.value) || 0;
+    // Sort by time after time change
+    if (field === 'time') {
+      getDay(key)[type] = sortByTime(getDay(key)[type]);
+    }
+  }
   save(); render();
 });
 
@@ -558,9 +639,17 @@ document.getElementById('tableBody').addEventListener('click', e => {
   if (!btn) return;
   const { key, type, idx } = btn.dataset;
   if (btn.classList.contains('add-btn')) {
-    getDay(key)[type].push({time:'', amt:0});
+    if (type === 'med') {
+      getDay(key).med.push({time:'', name:''});
+    } else {
+      getDay(key)[type].push({time:'', amt:0});
+    }
   } else if (btn.classList.contains('del-btn')) {
-    getDay(key)[type].splice(parseInt(idx), 1);
+    if (type === 'med') {
+      getDay(key).med.splice(parseInt(idx), 1);
+    } else {
+      getDay(key)[type].splice(parseInt(idx), 1);
+    }
   }
   save(); render();
 });
