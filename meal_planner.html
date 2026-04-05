@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이유식 식단표</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: #FAFAF8;
+  color: #1a1a18;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.header { margin-bottom: 1.8rem; }
+.header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+.header h1 span { color: #1D9E75; }
+.header p { font-size: 13px; color: #6b6b67; }
+
+.month-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.month-btn {
+  padding: 7px 18px; border-radius: 20px;
+  border: 1px solid #e0e0d8;
+  background: #fff; color: #6b6b67;
+  font-size: 13px; font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer; font-weight: 500; transition: all 0.15s;
+}
+.month-btn:hover { border-color: #1D9E75; color: #1D9E75; }
+.month-btn.active { background: #1D9E75; color: #fff; border-color: #1D9E75; }
+
+.summary-bar { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
+.summary-card { background: #F3F3EF; border-radius: 10px; padding: 12px 14px; }
+.summary-label { font-size: 11px; color: #9e9e9a; margin-bottom: 4px; font-weight: 500; }
+.summary-value { font-size: 20px; font-weight: 700; }
+.summary-sub { font-size: 11px; color: #9e9e9a; margin-top: 2px; }
+
+.progress-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.8rem; }
+.progress-card { background: #fff; border: 1px solid #e8e8e0; border-radius: 10px; padding: 12px 16px; }
+.progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.progress-title { font-size: 13px; font-weight: 500; }
+.progress-count { font-size: 12px; font-weight: 500; }
+.progress-track { height: 8px; background: #f0f0ec; border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+
+.dow-row { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 5px; margin-bottom: 6px; }
+.dow-cell { text-align: center; font-size: 11px; font-weight: 500; padding: 4px 0; }
+
+.week-block { margin-bottom: 6px; }
+.week-label { font-size: 10px; font-weight: 500; color: #b0b0a8; margin-bottom: 4px; }
+.days-grid { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 5px; }
+
+.day-card {
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 8px;
+  padding: 8px 5px;
+  min-height: 100px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.day-card.today { border-color: #1D9E75; border-width: 2px; }
+.day-card.other-month { opacity: 0.2; pointer-events: none; background: transparent; border-color: transparent; }
+
+.day-num { font-size: 13px; font-weight: 700; text-align: center; width: 100%; }
+.markers { display: flex; flex-direction: column; gap: 3px; width: 100%; }
+
+.check-item {
+  display: flex; align-items: center; gap: 4px;
+  cursor: pointer; padding: 2px 4px; border-radius: 4px;
+  transition: background 0.12s; user-select: none;
+}
+.check-item:hover { background: #f5f5f0; }
+
+.check-box {
+  width: 15px; height: 15px; border-radius: 3px;
+  border: 1.5px solid; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; transition: all 0.15s;
+}
+.egg-box   { border-color: #BA7517; color: #BA7517; }
+.fish-box  { border-color: #185FA5; color: #185FA5; }
+.pnut-box  { border-color: #7F77DD; color: #7F77DD; }
+.flour-box { border-color: #0F6E56; color: #0F6E56; }
+.egg-box.done   { background: #BA7517; color: #fff; }
+.fish-box.done  { background: #185FA5; color: #fff; }
+.pnut-box.done  { background: #7F77DD; color: #fff; }
+.flour-box.done { background: #0F6E56; color: #fff; }
+
+.check-label { font-size: 10px; font-weight: 500; }
+.egg-label   { color: #BA7517; }
+.fish-label  { color: #185FA5; }
+.pnut-label  { color: #7F77DD; }
+.flour-label { color: #0F6E56; }
+.check-label.done { opacity: 0.4; text-decoration: line-through; }
+
+.footer {
+  margin-top: 3rem; padding-top: 1.5rem;
+  border-top: 1px solid #e8e8e0;
+  text-align: center; font-size: 12px; color: #b0b0a8;
+}
+
+@media (max-width: 640px) {
+  .app { padding: 1.2rem 1rem; }
+  .summary-bar { grid-template-columns: 1fr 1fr; }
+  .progress-grid { grid-template-columns: 1fr; }
+  .day-card { min-height: 88px; padding: 6px 4px; }
+  .day-num { font-size: 12px; }
+  .check-label { font-size: 9px; }
+  .check-box { width: 13px; height: 13px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <h1>이유식 <span>식단표</span></h1>
+    <p>달걀 주 1회 · 생선 주 2회 · 땅콩 주 1회 · 밀가루 주 1회 · 매일 겹치지 않게 배분 · 체크 상태 자동 저장</p>
+  </header>
+
+  <nav class="month-nav" id="monthNav"></nav>
+  <div class="summary-bar" id="summaryBar"></div>
+  <div class="progress-grid" id="progressGrid"></div>
+
+  <div class="dow-row">
+    <div class="dow-cell" style="color:#E24B4A">일</div>
+    <div class="dow-cell" style="color:#6b6b67">월</div>
+    <div class="dow-cell" style="color:#6b6b67">화</div>
+    <div class="dow-cell" style="color:#6b6b67">수</div>
+    <div class="dow-cell" style="color:#6b6b67">목</div>
+    <div class="dow-cell" style="color:#6b6b67">금</div>
+    <div class="dow-cell" style="color:#185FA5">토</div>
+  </div>
+
+  <div id="calendarWrap"></div>
+
+  <footer class="footer">체크 상태는 이 브라우저에 자동 저장됩니다</footer>
+</div>
+
+<script>
+const MONTHS = ['4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+const MONTH_NUMS = [4,5,6,7,8,9,10,11,12];
+const YEAR = 2026;
+const STORAGE_KEY = 'baby-meal-checked-2026';
+
+const ITEMS = [
+  { key:'egg',   label:'달걀',  boxClass:'egg-box',   labelClass:'egg-label',   color:'#BA7517', bar:'#EF9F27' },
+  { key:'fish',  label:'생선',  boxClass:'fish-box',  labelClass:'fish-label',  color:'#185FA5', bar:'#378ADD' },
+  { key:'pnut',  label:'땅콩',  boxClass:'pnut-box',  labelClass:'pnut-label',  color:'#7F77DD', bar:'#AFA9EC' },
+  { key:'flour', label:'밀가루', boxClass:'flour-box', labelClass:'flour-label', color:'#0F6E56', bar:'#5DCAA5' },
+];
+
+function loadChecked() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveChecked() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
+}
+
+let checked = loadChecked();
+
+function toggleCheck(key) {
+  checked[key] = !checked[key];
+  if (!checked[key]) delete checked[key];
+  saveChecked();
+  renderAll();
+}
+
+const planCache = {};
+
+function buildPlan(year, month) {
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const firstDow = new Date(year, month - 1, 1).getDay();
+  const plan = { _weeks: {} };
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dow = new Date(year, month - 1, d).getDay();
+    const weekNum = Math.floor((d - 1 + firstDow) / 7);
+
+    if (!plan._weeks[weekNum]) {
+      // 0~6 슬롯을 시드 기반으로 셔플 후 겹치지 않게 배정
+      const seed = weekNum * 13 + month * 7;
+      const slots = [0,1,2,3,4,5,6];
+      for (let i = slots.length - 1; i > 0; i--) {
+        const j = (seed * (i + 3) + i * 17) % (i + 1);
+        [slots[i], slots[j]] = [slots[j], slots[i]];
+      }
+      // slots[0]=달걀, slots[1]=생선1, slots[2]=생선2, slots[3]=땅콩, slots[4]=밀가루
+      plan._weeks[weekNum] = {
+        eggDay:   slots[0],
+        fishDays: [slots[1], slots[2]],
+        pnutDay:  slots[3],
+        flourDay: slots[4],
+      };
+    }
+
+    const { eggDay, fishDays, pnutDay, flourDay } = plan._weeks[weekNum];
+    plan[d] = {
+      egg:   eggDay === dow,
+      fish:  fishDays.includes(dow),
+      pnut:  pnutDay === dow,
+      flour: flourDay === dow,
+    };
+  }
+  return plan;
+}
+
+function getPlan(month) {
+  if (!planCache[month]) planCache[month] = buildPlan(YEAR, month);
+  return planCache[month];
+}
+
+let currentMonth = 4;
+
+function countStats(month) {
+  const plan = getPlan(month);
+  const days = new Date(YEAR, month, 0).getDate();
+  const stats = {};
+  ITEMS.forEach(it => { stats[it.key] = { T:0, D:0 }; });
+  for (let d = 1; d <= days; d++) {
+    ITEMS.forEach(it => {
+      if (plan[d][it.key]) {
+        stats[it.key].T++;
+        if (checked[`${month}-${d}-${it.key}`]) stats[it.key].D++;
+      }
+    });
+  }
+  return stats;
+}
+
+function renderSummary(month) {
+  const stats = countStats(month);
+
+  document.getElementById('summaryBar').innerHTML = ITEMS.map(it => {
+    const { T, D } = stats[it.key];
+    const pct = T > 0 ? Math.round(D/T*100) : 0;
+    return `<div class="summary-card">
+      <div class="summary-label">${it.label}</div>
+      <div class="summary-value" style="color:${it.color}">${D} <span style="font-size:13px;font-weight:400;color:#9e9e9a">/ ${T}</span></div>
+      <div class="summary-sub">${pct}% 완료</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('progressGrid').innerHTML = ITEMS.map(it => {
+    const { T, D } = stats[it.key];
+    const pct = T > 0 ? Math.round(D/T*100) : 0;
+    return `<div class="progress-card">
+      <div class="progress-header">
+        <div class="progress-title">${it.label}</div>
+        <div class="progress-count" style="color:${it.color}">${D} / ${T}회 · ${pct}%</div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${it.bar}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderCalendar(month) {
+  const plan = getPlan(month);
+  const daysInMonth = new Date(YEAR, month, 0).getDate();
+  const firstDow = new Date(YEAR, month - 1, 1).getDay();
+  const today = new Date();
+  const totalCells = Math.ceil((firstDow + daysInMonth) / 7) * 7;
+
+  let html = '';
+  let dayCount = 1;
+
+  for (let cell = 0; cell < totalCells; cell++) {
+    const col = cell % 7;
+
+    if (col === 0) {
+      if (cell > 0) html += `</div></div>`;
+      html += `<div class="week-block"><div class="week-label">${Math.floor(cell/7)+1}주차</div><div class="days-grid">`;
+    }
+
+    const inMonth = cell >= firstDow && dayCount <= daysInMonth;
+    if (!inMonth) {
+      html += `<div class="day-card other-month"></div>`;
+    } else {
+      const d = dayCount;
+      const isToday = today.getFullYear()===YEAR && today.getMonth()+1===month && today.getDate()===d;
+      const dayPlan = plan[d];
+      const numColor = col===0 ? '#E24B4A' : col===6 ? '#185FA5' : '#1a1a18';
+
+      let markersHtml = '';
+      ITEMS.forEach(it => {
+        if (!dayPlan[it.key]) return;
+        const k = `${month}-${d}-${it.key}`;
+        const done = !!checked[k];
+        markersHtml += `<div class="check-item" onclick="toggleCheck('${k}')">
+          <div class="check-box ${it.boxClass}${done?' done':''}">${done?'✓':''}</div>
+          <span class="check-label ${it.labelClass}${done?' done':''}">${it.label}</span>
+        </div>`;
+      });
+
+      html += `<div class="day-card${isToday?' today':''}">
+        <div class="day-num" style="color:${numColor}">${d}</div>
+        <div class="markers">${markersHtml}</div>
+      </div>`;
+      dayCount++;
+    }
+  }
+  html += `</div></div>`;
+  document.getElementById('calendarWrap').innerHTML = html;
+}
+
+function renderMonthNav() {
+  document.getElementById('monthNav').innerHTML = MONTHS.map((m, i) =>
+    `<button class="month-btn${MONTH_NUMS[i]===currentMonth?' active':''}" onclick="switchMonth(${MONTH_NUMS[i]})">${m}</button>`
+  ).join('');
+}
+
+function renderAll() {
+  renderSummary(currentMonth);
+  renderCalendar(currentMonth);
+}
+
+function switchMonth(month) {
+  currentMonth = month;
+  renderMonthNav();
+  renderAll();
+}
+
+switchMonth(4);
+</script>
+</body>
+</html>
