@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>지꿀이 수유 기록</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #FDF8F2;
+    --warm: #F5EDE0;
+    --peach: #F2C4A0;
+    --blush: #E8A07A;
+    --rose: #D4735A;
+    --brown: #8B5E3C;
+    --dark: #3A2518;
+    --muted: #9B7B65;
+    --soft-border: #E8D8C8;
+    --formula-mid: #7BBDDC;
+    --formula-dark: #2A7FAF;
+    --formula-bg: #EEF7FC;
+    --solid-mid: #8DC87A;
+    --solid-dark: #4A8C35;
+    --solid-bg: #EEF7EA;
+    --total-dark: #C05A25;
+    --med-mid: #B39DDB;
+    --med-dark: #6A3DAB;
+    --med-bg: #F3EEFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+  }
+
+  .hero {
+    text-align: center;
+    padding: 2.5rem 0 2rem;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: var(--peach);
+    color: var(--brown);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    color: var(--dark);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+  .hero h1 span { color: var(--rose); }
+  .hero-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+    font-weight: 300;
+  }
+  .divider {
+    width: 48px; height: 2px;
+    background: var(--peach);
+    margin: 16px auto 0;
+    border-radius: 2px;
+  }
+
+  .month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 1.5rem 0;
+  }
+  .nav-btn {
+    background: white;
+    border: 1px solid var(--soft-border);
+    border-radius: 50%;
+    width: 36px; height: 36px;
+    font-size: 15px;
+    cursor: pointer;
+    color: var(--brown);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .nav-btn:hover { background: var(--warm); border-color: var(--peach); }
+
+  .month-title-btn {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark);
+    min-width: 130px;
+    text-align: center;
+    background: white;
+    border: 1px solid var(--soft-border);
+    border-radius: 20px;
+    padding: 7px 18px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .month-title-btn:hover { background: var(--warm); border-color: var(--peach); }
+  .cal-icon { font-size: 14px; }
+
+  .picker-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(58, 37, 24, 0.35);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .picker-overlay.open { display: flex; }
+  .picker-box {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    width: 300px;
+    max-width: 92vw;
+    box-shadow: 0 12px 40px rgba(58,37,24,0.18);
+  }
+  .picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.2rem;
+  }
+  .picker-year-nav { display: flex; align-items: center; gap: 10px; }
+  .picker-year-btn {
+    background: var(--warm);
+    border: none;
+    border-radius: 50%;
+    width: 28px; height: 28px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--brown);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.1s;
+  }
+  .picker-year-btn:hover { background: var(--peach); }
+  .picker-year-label {
+    font-size: 16px; font-weight: 700; color: var(--dark);
+    min-width: 60px; text-align: center;
+  }
+  .picker-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 18px; color: var(--muted);
+    line-height: 1; padding: 2px 6px;
+  }
+  .picker-close:hover { color: var(--rose); }
+  .picker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .picker-month-btn {
+    background: var(--cream);
+    border: 1px solid var(--soft-border);
+    border-radius: 12px;
+    padding: 11px 4px;
+    font-size: 14px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 500;
+    color: var(--dark);
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+  .picker-month-btn:hover { background: var(--warm); border-color: var(--peach); }
+  .picker-month-btn.active { background: var(--rose); border-color: var(--rose); color: white; }
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 1.75rem;
+  }
+  .scard {
+    background: white;
+    border: 1px solid var(--soft-border);
+    border-radius: 16px;
+    padding: 1rem 1.1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .scard::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 16px 16px 0 0;
+  }
+  .scard.formula::before { background: var(--formula-mid); }
+  .scard.solid::before { background: var(--solid-mid); }
+  .scard.total::before { background: var(--blush); }
+  .scard.med::before { background: var(--med-mid); }
+  .scard-label { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 6px; }
+  .scard-val { font-size: 26px; font-weight: 700; line-height: 1; }
+  .scard.formula .scard-val { color: var(--formula-dark); }
+  .scard.solid .scard-val { color: var(--solid-dark); }
+  .scard.total .scard-val { color: var(--total-dark); }
+  .scard.med .scard-val { color: var(--med-dark); }
+  .scard-unit { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+
+  .table-wrap {
+    background: white;
+    border: 1px solid var(--soft-border);
+    border-radius: 18px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table { width: 100%; min-width: 480px; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    background: var(--warm);
+    padding: 10px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--soft-border);
+    text-align: center;
+  }
+  thead th:first-child { text-align: left; padding-left: 16px; min-width: 70px; }
+  tbody tr { border-bottom: 1px solid var(--soft-border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #FDFAF7; }
+  tbody tr.today-row { background: #FFF8F2; }
+  tbody td { padding: 8px 6px; vertical-align: top; }
+  tbody td:first-child {
+    padding-left: 16px;
+    padding-top: 11px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .today-dot {
+    display: inline-block;
+    width: 5px; height: 5px;
+    background: var(--rose);
+    border-radius: 50%;
+    margin-left: 4px;
+    vertical-align: middle;
+    margin-bottom: 1px;
+  }
+
+  .feed-list { display: flex; flex-direction: column; gap: 5px; }
+  .feed-row { display: flex; align-items: center; gap: 4px; }
+
+  /* Type toggle icon button */
+  .type-btn {
+    background: none;
+    border: 1.5px solid var(--soft-border);
+    border-radius: 8px;
+    width: 28px; height: 28px;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+    transition: transform 0.1s, background 0.12s;
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .type-btn[data-feedtype="formula"] {
+    background: var(--formula-bg);
+    border-color: var(--formula-mid);
+  }
+  .type-btn[data-feedtype="solid"] {
+    background: var(--solid-bg);
+    border-color: var(--solid-mid);
+  }
+  .type-btn:active { transform: scale(0.88); }
+
+  .time-input {
+    width: 70px;
+    border: 1px solid var(--soft-border);
+    border-radius: 8px;
+    padding: 4px 6px;
+    font-size: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    text-align: center;
+    transition: border-color 0.15s;
+  }
+  .time-input:focus { outline: none; border-color: var(--peach); background: white; }
+
+  .amt-input {
+    width: 48px;
+    border: 1px solid var(--soft-border);
+    border-radius: 8px;
+    padding: 4px 5px;
+    text-align: center;
+    font-size: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    transition: border-color 0.15s;
+  }
+  .amt-input:focus { outline: none; border-color: var(--peach); background: white; }
+  .unit-lbl { font-size: 11px; color: var(--muted); min-width: 14px; }
+
+  .add-btn {
+    background: none;
+    border: 1px dashed var(--soft-border);
+    border-radius: 7px;
+    width: 22px; height: 22px;
+    cursor: pointer;
+    font-size: 15px;
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+    transition: background 0.1s, border-color 0.1s;
+  }
+  .add-btn:hover { background: var(--warm); border-color: var(--peach); color: var(--brown); }
+  .del-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    color: #CCC;
+    padding: 0 2px;
+    transition: color 0.1s;
+  }
+  .del-btn:hover { color: var(--rose); }
+
+  .med-name-input {
+    width: 60px;
+    border: 1px solid var(--soft-border);
+    border-radius: 8px;
+    padding: 4px 7px;
+    font-size: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    transition: border-color 0.15s;
+    min-width: 0;
+  }
+  .med-name-input:focus { outline: none; border-color: var(--med-mid); background: white; }
+
+  .total-cell {
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    padding-top: 11px !important;
+    color: var(--dark);
+  }
+  .total-cell.formula-total { color: var(--formula-dark); }
+  .total-cell.solid-total { color: var(--solid-dark); }
+  .total-cell.grand-total { color: var(--total-dark); font-size: 14px; }
+  .dash { color: #DDD; font-weight: 400; }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 26px; }
+    .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .scard { padding: 0.75rem 0.75rem; }
+    .scard-val { font-size: 20px; }
+    thead th { font-size: 10px; padding: 8px 4px; }
+    .time-input { width: 58px; font-size: 11px; }
+    .amt-input { width: 40px; font-size: 11px; }
+    .type-btn { width: 24px; height: 24px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hero">
+    <div class="hero-badge">feeding tracker</div>
+    <h1>지꿀이 <span>수유 기록</span></h1>
+    <p class="hero-sub">분유 · 이유식 섭취량 및 시간 추적</p>
+    <div class="divider"></div>
+  </div>
+
+  <div class="month-nav">
+    <button class="nav-btn" id="prevBtn">◀</button>
+    <button class="month-title-btn" id="pickerTrigger">
+      <span class="cal-icon">📅</span>
+      <span id="monthLabel"></span>
+    </button>
+    <button class="nav-btn" id="nextBtn">▶</button>
+  </div>
+
+  <div class="picker-overlay" id="pickerOverlay">
+    <div class="picker-box">
+      <div class="picker-header">
+        <div class="picker-year-nav">
+          <button class="picker-year-btn" id="pickerPrevYear">◀</button>
+          <div class="picker-year-label" id="pickerYearLabel"></div>
+          <button class="picker-year-btn" id="pickerNextYear">▶</button>
+        </div>
+        <button class="picker-close" id="pickerClose">✕</button>
+      </div>
+      <div class="picker-grid" id="pickerGrid"></div>
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="scard formula">
+      <div class="scard-label">🍼 분유 일평균</div>
+      <div><span class="scard-val" id="sumFormula">0</span><span class="scard-unit">ml</span></div>
+    </div>
+    <div class="scard solid">
+      <div class="scard-label">🥣 이유식 일평균</div>
+      <div><span class="scard-val" id="sumSolid">0</span><span class="scard-unit">g</span></div>
+    </div>
+    <div class="scard total">
+      <div class="scard-label">합계 일평균</div>
+      <div><span class="scard-val" id="sumTotal">0</span></div>
+    </div>
+    <div class="scard med">
+      <div class="scard-label">💊 약 일평균</div>
+      <div><span class="scard-val" id="sumMed">0</span><span class="scard-unit">회</span></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th>수유 (시간 · 종류 · 양)</th>
+          <th>약 (시간 · 종류)</th>
+          <th>분유<br>합계</th>
+          <th>이유식<br>합계</th>
+          <th>총합</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const KEY = 'jikkooli_v2';
+const NAV_KEY = 'jikkooli_nav';
+let state = {};
+
+const today = new Date();
+let curY = today.getFullYear(), curM = today.getMonth();
+let pickerY = curY;
+const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+async function save() {
+  try { await window.storage.set(KEY, JSON.stringify(state), true); } catch(e) {}
+}
+async function saveNav() {
+  try { await window.storage.set(NAV_KEY, JSON.stringify({y: curY, m: curM}), true); } catch(e) {}
+}
+
+async function initLoad() {
+  try {
+    const r = await window.storage.get(KEY, true);
+    if (r) state = JSON.parse(r.value);
+  } catch(e) {}
+  // Migrate old data (separate formula/solid) to unified feeds array
+  for (const k of Object.keys(state)) {
+    const d = state[k];
+    if (d.formula !== undefined || d.solid !== undefined) {
+      const feeds = [];
+      (d.formula || []).forEach(e => { if (e.time || parseFloat(e.amt)) feeds.push({time: e.time||'', amt: e.amt||0, feedtype: 'formula'}); });
+      (d.solid   || []).forEach(e => { if (e.time || parseFloat(e.amt)) feeds.push({time: e.time||'', amt: e.amt||0, feedtype: 'solid'}); });
+      d.feeds = feeds.length > 0 ? sortByTime(feeds) : [{time:'', amt:0, feedtype:'formula'}];
+      delete d.formula; delete d.solid;
+    }
+  }
+  try {
+    const nav = await window.storage.get(NAV_KEY, true);
+    if (nav) { const n = JSON.parse(nav.value); if (n && n.y != null) { curY = n.y; curM = n.m; } }
+  } catch(e) {}
+  pickerY = curY;
+  render();
+}
+
+function getDays(y, m) { return new Date(y, m + 1, 0).getDate(); }
+function dKey(y, m, d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function getDay(key) {
+  if (!state[key]) state[key] = { feeds: [{time:'', amt:0, feedtype:'formula'}], med: [{time:'', name:''}] };
+  if (!state[key].feeds) state[key].feeds = [{time:'', amt:0, feedtype:'formula'}];
+  if (!state[key].med)   state[key].med   = [{time:'', name:''}];
+  return state[key];
+}
+function sumByType(arr, type) {
+  return arr.reduce((a, e) => a + (e.feedtype === type ? (parseFloat(e.amt)||0) : 0), 0);
+}
+function countMed(arr) { return arr.filter(e => e.time || e.name).length; }
+function sortByTime(arr) {
+  return [...arr].sort((a, b) => {
+    if (!a.time && !b.time) return 0;
+    if (!a.time) return 1;
+    if (!b.time) return -1;
+    return a.time.localeCompare(b.time);
+  });
+}
+
+function buildFeedList(key) {
+  const data = getDay(key).feeds;
+  return '<div class="feed-list">' +
+    data.map((e, i) => {
+      const isFormula = e.feedtype !== 'solid';
+      const unit = isFormula ? 'ml' : 'g';
+      const step = isFormula ? 10 : 5;
+      const icon = isFormula ? '🍼' : '🥣';
+      const ft   = isFormula ? 'formula' : 'solid';
+      return `<div class="feed-row">
+        <input class="time-input" type="time" value="${e.time||''}" data-key="${key}" data-type="feeds" data-idx="${i}" data-field="time" />
+        <button class="type-btn" data-key="${key}" data-idx="${i}" data-feedtype="${ft}" title="탭하면 종류 변경">${icon}</button>
+        <input class="amt-input" type="number" min="0" max="800" step="${step}" value="${e.amt||''}" placeholder="0" data-key="${key}" data-type="feeds" data-idx="${i}" data-field="amt" />
+        <span class="unit-lbl">${unit}</span>
+        <button class="del-btn" data-key="${key}" data-type="feeds" data-idx="${i}">&#x2715;</button>
+      </div>`;
+    }).join('') +
+    `<button class="add-btn" data-key="${key}" data-type="feeds">+</button></div>`;
+}
+
+function buildMedList(key) {
+  const data = getDay(key).med;
+  return '<div class="feed-list">' +
+    data.map((e, i) => `
+      <div class="feed-row">
+        <input class="time-input" type="time" value="${e.time||''}" data-key="${key}" data-type="med" data-idx="${i}" data-field="time" />
+        <input class="med-name-input" type="text" value="${e.name||''}" placeholder="약 종류" data-key="${key}" data-type="med" data-idx="${i}" data-field="name" />
+        <button class="del-btn" data-key="${key}" data-type="med" data-idx="${i}">&#x2715;</button>
+      </div>`).join('') +
+    `<button class="add-btn" data-key="${key}" data-type="med">+</button></div>`;
+}
+
+function render() {
+  document.getElementById('monthLabel').textContent = `${curY}년 ${MONTHS[curM]}`;
+  const days = getDays(curY, curM);
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  let totF = 0, totS = 0, totMed = 0, activeDays = 0;
+
+  for (let d = 1; d <= days; d++) {
+    const key = dKey(curY, curM, d);
+    const data = getDay(key);
+    const fSum = sumByType(data.feeds, 'formula');
+    const sSum = sumByType(data.feeds, 'solid');
+    const mCount = countMed(data.med);
+    if (fSum > 0 || sSum > 0 || mCount > 0) activeDays++;
+    totF += fSum; totS += sSum; totMed += mCount;
+    const grand = fSum + sSum;
+    const isToday = today.getFullYear() === curY && today.getMonth() === curM && today.getDate() === d;
+    const dow = ['일','월','화','수','목','금','토'][new Date(curY, curM, d).getDay()];
+    const tr = document.createElement('tr');
+    if (isToday) tr.className = 'today-row';
+    tr.innerHTML = `
+      <td>${d}일 (${dow})${isToday ? '<span class="today-dot"></span>' : ''}</td>
+      <td>${buildFeedList(key)}</td>
+      <td>${buildMedList(key)}</td>
+      <td class="total-cell formula-total">${fSum > 0 ? fSum+'ml' : '<span class="dash">-</span>'}</td>
+      <td class="total-cell solid-total">${sSum > 0 ? sSum+'g' : '<span class="dash">-</span>'}</td>
+      <td class="total-cell grand-total">${grand > 0 ? grand : '<span class="dash">-</span>'}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById('sumFormula').textContent = activeDays > 0 ? Math.round(totF / activeDays) : 0;
+  document.getElementById('sumSolid').textContent   = activeDays > 0 ? Math.round(totS / activeDays) : 0;
+  document.getElementById('sumTotal').textContent   = activeDays > 0 ? Math.round((totF + totS) / activeDays).toLocaleString() : 0;
+  document.getElementById('sumMed').textContent     = activeDays > 0 ? (totMed / activeDays).toFixed(1) : 0;
+  saveNav();
+}
+
+// Picker
+function renderPicker() {
+  document.getElementById('pickerYearLabel').textContent = pickerY + '년';
+  const grid = document.getElementById('pickerGrid');
+  grid.innerHTML = '';
+  MONTHS.forEach((label, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'picker-month-btn' + (pickerY === curY && i === curM ? ' active' : '');
+    btn.textContent = label;
+    btn.addEventListener('click', () => { curY = pickerY; curM = i; closePicker(); render(); });
+    grid.appendChild(btn);
+  });
+}
+function openPicker()  { pickerY = curY; renderPicker(); document.getElementById('pickerOverlay').classList.add('open'); }
+function closePicker() { document.getElementById('pickerOverlay').classList.remove('open'); }
+
+document.getElementById('pickerTrigger').addEventListener('click', openPicker);
+document.getElementById('pickerClose').addEventListener('click', closePicker);
+document.getElementById('pickerOverlay').addEventListener('click', e => { if (e.target === document.getElementById('pickerOverlay')) closePicker(); });
+document.getElementById('pickerPrevYear').addEventListener('click', () => { pickerY--; renderPicker(); });
+document.getElementById('pickerNextYear').addEventListener('click', () => { pickerY++; renderPicker(); });
+
+// Field change
+function handleFieldChange(el) {
+  const { key, type, idx, field } = el.dataset;
+  if (!key) return;
+  const arr = getDay(key)[type];
+  const entry = arr[parseInt(idx)];
+  if (field === 'time') {
+    entry.time = el.value;
+    if (type === 'feeds') getDay(key).feeds = sortByTime(getDay(key).feeds);
+    else                  getDay(key).med   = sortByTime(getDay(key).med);
+  } else if (field === 'amt') {
+    entry.amt = parseFloat(el.value) || 0;
+  } else if (field === 'name') {
+    entry.name = el.value;
+  }
+  save(); render();
+}
+
+// time → blur; others → change
+document.getElementById('tableBody').addEventListener('blur', e => {
+  const el = e.target;
+  if (el.dataset.field === 'time' && el.dataset.key) handleFieldChange(el);
+}, true);
+
+document.getElementById('tableBody').addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.field !== 'time' && el.dataset.key) handleFieldChange(el);
+});
+
+document.getElementById('tableBody').addEventListener('click', e => {
+  // Type toggle
+  const typeBtn = e.target.closest('.type-btn');
+  if (typeBtn) {
+    const { key, idx } = typeBtn.dataset;
+    const entry = getDay(key).feeds[parseInt(idx)];
+    entry.feedtype = entry.feedtype === 'solid' ? 'formula' : 'solid';
+    save(); render();
+    return;
+  }
+  // Add / Delete
+  const btn = e.target.closest('button');
+  if (!btn || !btn.dataset.key) return;
+  const { key, type, idx } = btn.dataset;
+
+  if (btn.classList.contains('add-btn')) {
+    if (type === 'med') getDay(key).med.push({time:'', name:''});
+    else                getDay(key).feeds.push({time:'', amt:0, feedtype:'formula'});
+  } else if (btn.classList.contains('del-btn')) {
+    const i = parseInt(idx);
+    if (type === 'med') {
+      getDay(key).med.splice(i, 1);
+      if (getDay(key).med.length === 0) getDay(key).med.push({time:'', name:''});
+    } else {
+      getDay(key).feeds.splice(i, 1);
+      if (getDay(key).feeds.length === 0) getDay(key).feeds.push({time:'', amt:0, feedtype:'formula'});
+    }
+  }
+  save(); render();
+});
+
+document.getElementById('prevBtn').addEventListener('click', () => { curM--; if (curM < 0)  { curM = 11; curY--; } render(); });
+document.getElementById('nextBtn').addEventListener('click', () => { curM++; if (curM > 11) { curM = 0;  curY++; } render(); });
+
+initLoad();
+</script>
+</body>
+</html>
